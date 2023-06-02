@@ -1,0 +1,108 @@
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_instance" "HelloWorld" {
+  ami           = "ami-0ab193018f3e9351b"
+  instance_type = "t2.micro"
+  subnet_id     = "subnet-0a4d013310103b5cc"
+}
+
+resource "aws_vpc" "ejercicio-vpc" {
+  cidr_block = "10.203.0.0/16"
+  tags = {
+    Name = "ejercicio-vpc"
+  }
+}
+
+resource "aws_subnet" "subnet-a" {
+  vpc_id                  = "vpc-0aefb0eb33244db4c"
+  cidr_block              = "10.203.0.0/24"
+  availability_zone       = "us-west-2a"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "subnet-a"
+  }
+}
+
+resource "aws_subnet" "subnet-b" {
+  vpc_id                  = "vpc-0aefb0eb33244db4c"
+  cidr_block              = "10.203.1.0/24"
+  availability_zone       = "us-west-2b"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "subnet-b"
+  }
+}
+
+resource "aws_subnet" "subnet-c" {
+  vpc_id                  = "vpc-0aefb0eb33244db4c"
+  cidr_block              = "10.203.2.0/24"
+  availability_zone       = "us-west-2c"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "subnet-c"
+  }
+}
+
+resource "aws_internet_gateway" "GatewayEjercicio" {
+  vpc_id = "vpc-0aefb0eb33244db4c"
+  tags = {
+    Name = "GatewayEjercicio"
+  }
+}
+
+resource "aws_route_table" "TablaDeRuta" {
+  vpc_id = "vpc-0aefb0eb33244db4c"
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.GatewayEjercicio.id
+  }
+  tags = {
+    Name = "TablaDeRuta"
+  }
+}
+
+resource "aws_route_table_association" "RutaAsociacion-a" {
+  subnet_id      = aws_subnet.subnet-a.id
+  route_table_id = aws_route_table.TablaDeRuta.id
+}
+
+resource "aws_route_table_association" "RutaAsociacion-b" {
+  subnet_id      = aws_subnet.subnet-b.id
+  route_table_id = aws_route_table.TablaDeRuta.id
+}
+
+resource "aws_route_table_association" "RutaAsociacion-c" {
+  subnet_id      = aws_subnet.subnet-c.id
+  route_table_id = aws_route_table.TablaDeRuta.id
+}
+
+resource "aws_security_group" "grupo-seguridad" {
+  name = "MiGrupoSeguridad"
+  vpc_id = aws_vpc.ejercicio-vpc.id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["213.96.245.9/32"]
+}
+
+ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = "tcp"
+    cidr_blocks = ["213.96.245.9/32"]
+   }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "MiGrupoSeguridad"
+  }
+}
